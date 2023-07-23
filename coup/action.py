@@ -1,6 +1,4 @@
 from enum import Enum
-from dataclasses import dataclass
-from coup.player import Player
 
 
 class Action(Enum):
@@ -34,11 +32,4 @@ class Card(Enum):
     ASSASSIN = 4
     CONTESSA = 5
     AMBASSADOR = 6
-
-@dataclass
-class GameState:
-    players: list[Player]
-    active_player: Player
-    revealed_deck: list[Card]
-
 

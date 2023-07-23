@@ -1,7 +1,15 @@
 from random import shuffle
+from dataclasses import dataclass
 
 from coup.player import Player
 from coup.game_state import Card, GameState, Action
+
+
+@dataclass
+class GameState:
+    players: list[Player]
+    active_player: Player
+    revealed_deck: list[Card]
 
 
 class Game:
@@ -86,7 +94,7 @@ class Game:
                 actions.append(Action.ASSASSINATE)
 
             return actions
-        
+
         # Response
         if prev_action == Action.INCOME:
             return [Action.NOTHING]
