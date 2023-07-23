@@ -1,4 +1,4 @@
-from game_state import Card, Action
+from coup.game_state import Card, Action
 
 
 class Player:

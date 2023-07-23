@@ -1,7 +1,7 @@
 from random import shuffle
 
-from player import Player
-from game_state import Card, GameState, Action
+from coup.player import Player
+from coup.game_state import Card, GameState, Action
 
 
 class Game:

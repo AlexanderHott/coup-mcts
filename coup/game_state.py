@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from player import Player
+from coup.player import Player
 
 
 class Action(Enum):
