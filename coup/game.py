@@ -1,5 +1,5 @@
 from random import shuffle
-import copy
+import logging
 from dataclasses import dataclass
 
 from coup.player import Player
@@ -41,17 +41,21 @@ class Game:
 
     def is_over(self) -> Player | None:
         """Returns the winner if the game is over, None otherwise."""
-        alive_players = list(filter(lambda p: len(p.hand) > 0, self.players))
+        alive_players = list(
+            filter(lambda p: p.hand != [Card.EMPTY, Card.EMPTY], self.players)
+        )
         if len(alive_players) == 1:
             return alive_players[0]
         return None
 
-    def play(self):
+    def play(self) -> Player:
         self.perfect_game_states.append(GameState.from_game_perfect(self))
-        while self.is_over() is None:
+        while (winner := self.is_over()) is None:
             for i, player in enumerate(self.players):
-                [print(player) for player in self.players]
-                [print(s) for s in self.perfect_game_states]
+                if winner := self.is_over():
+                    return winner
+                [logging.info(player) for player in self.players]
+                [logging.info(s) for s in self.perfect_game_states]
                 self.current_player_idx = i
                 # self.player_game_states[player.id].append(
                 #     GameState.for_player(self, player)
@@ -59,9 +63,9 @@ class Game:
 
                 action = player.ask_action(self.get_legal_actions(player))
 
-                print("pre ")
+                logging.info("pre ")
                 self.update_gamestate(action, self.current_player_idx)
-                print("players coins", self.players[i].coins)
+                logging.info("players coins", self.players[i].coins)
 
                 # Ask to
                 highest_action = Action.NOTHING
@@ -78,45 +82,49 @@ class Game:
 
                 self.update_gamestate(highest_action, self.current_player_idx)
 
+        return winner
+
     def update_gamestate(self, action: Action, player_idx: int):
-        state = copy.deepcopy(
+        prev_state = (
             self.perfect_game_states[-1]
             if len(self.perfect_game_states)
             else GameState.from_game_perfect(self, action)
         )
-        state.current_player = player_idx
-        print(f"Updating state: p: {state.last_action} c: {action}")
+        prev_state.current_player = player_idx
+        logging.info(f"Updating prev_state: p: {prev_state.last_action} c: {action}")
 
-        if state.last_action == Action.NOTHING:
-            state.last_action = action
-        # if state.last_action == Action.NOTHING and action == Action.INCOME:
-        #     state.last_action = action
-        # elif state.last_action == Action.NOTHING and action == Action.STEAL:
-        #     state.last_action = action
-        # elif state.last_action == Action.NOTHING and action == Action.TAX:
+        if prev_state.last_action == Action.NOTHING:
+            ...
+            # prev_state.last_action = action
+        # if prev_state.last_action == Action.NOTHING and action == Action.INCOME:
+        #     prev_state.last_action = action
+        # elif prev_state.last_action == Action.NOTHING and action == Action.STEAL:
+        #     prev_state.last_action = action
+        # elif prev_state.last_action == Action.NOTHING and action == Action.TAX:
         #     ...
 
-        if state.last_action == Action.INCOME and action == Action.NOTHING:
+        if prev_state.last_action == Action.INCOME and action == Action.NOTHING:
             self.players[player_idx].coins += 1
-            state.last_action = action
-            state.players[player_idx].coins += 1
+            # prev_state.last_action = action
+            # prev_state.players[player_idx].coins += 1
 
-        elif state.last_action == Action.TAX and action == Action.NOTHING:
-            print(
-                "taxing"
-            )
+        elif prev_state.last_action == Action.TAX and action == Action.NOTHING:
+            logging.info("taxing")
             self.players[player_idx].coins += 3
-            state.last_action = action
-            state.players[player_idx].coins += 3
+            # prev_state.last_action = action
+            # prev_state.players[player_idx].coins += 3
 
-        elif state.last_action == Action.COUP and action == Action.NOTHING:
+        elif prev_state.last_action == Action.COUP and action == Action.NOTHING:
             other_player_idx = 0 if player_idx == 1 else 1
+            self.players[player_idx].coins -= 7
             self.players[other_player_idx].lose_influence()
+            # prev_state.players[other_player_idx].hand
             ...
 
-
-        elif state.last_action == Action.STEAL and action == Action.BLOCK_STEAL:
+        elif prev_state.last_action == Action.STEAL and action == Action.BLOCK_STEAL:
             ...
+
+        state = GameState.from_game_perfect(self, action)
 
         self.perfect_game_states.append(state)
         # return state
@@ -129,18 +137,25 @@ class Game:
             if player.coins >= 10:
                 return [Action.COUP]
 
+            # actions = [
+            #     Action.INCOME,
+            #     Action.FORIGN_AID,
+            #     Action.TAX,
+            #     Action.STEAL,
+            #     Action.EXCHANGE,
+            # ]
+            # TODO: Add back all actions
             actions = [
                 Action.INCOME,
-                Action.FORIGN_AID,
                 Action.TAX,
-                Action.STEAL,
-                Action.EXCHANGE,
             ]
 
             if player.coins >= 7:
                 actions.append(Action.COUP)
-            if player.coins >= 3:
-                actions.append(Action.ASSASSINATE)
+
+            # TODO: Add back all actions
+            # if player.coins >= 3:
+            #     actions.append(Action.ASSASSINATE)
 
             return actions
 
