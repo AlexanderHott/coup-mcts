@@ -5,8 +5,10 @@ import logging
 if __name__ == "__main__":
     # p1 = CliPlayer()
     # p2 = CliPlayer()
-    logging.getLogger().setLevel(logging.WARN)
+    logging.getLogger().setLevel(logging.DEBUG)
     p1_wins: list[bool] = []
+    # game = Game([p1, p2])
+    # print(game.play())
     p1 = RandomPlayer()
     p2 = RandomPlayer()
     for _ in range(5000):

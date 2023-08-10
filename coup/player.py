@@ -31,6 +31,14 @@ class Player(Protocol):
         ...
 
     @property
+    def dead(self) -> list[Card]:
+        ...
+
+    @dead.setter
+    def dead(self, cards: list[Card]):
+        ...
+
+    @property
     def coins(self) -> int:
         ...
 

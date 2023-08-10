@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class Action(Enum):
+    # Card actions
     NOTHING = 0
     INCOME = 1
     FORIGN_AID = 2
@@ -11,18 +12,29 @@ class Action(Enum):
     EXCHANGE = 6
     COUP = 7
 
+    # Card blocks
     BLOCK_FORIGN_AID = 8
     BLOCK_STEAL = 9
     BLOCK_ASSASSINATE = 10
 
+    # Challenges
     CHALLENGE_TAX = 11
     CHALLENGE_STEAL = 12
     CHALLENGE_ASSASSINATE = 13
     CHALLENGE_EXCHANGE = 14
 
+    # Challenge block
     CHALLENGE_BLOCK_FORIGN_AID = 15
     CHALLENGE_BLOCK_STEAL = 16
     CHALLENGE_BLOCK_ASSASSINATE = 17
+
+    # Lose influence
+    LOSE_INFLUENCE_DUKE = 18
+    LOSE_INFLUENCE_CAPTIAN = 19
+    LOSE_INFLUENCE_ASSASSIN = 20
+    LOSE_INFLUENCE_CONTESSA = 21
+    LOSE_INFLUENCE_AMBASSADOR = 22
+
 
 class Card(Enum):
     EMPTY = 0
@@ -32,4 +44,3 @@ class Card(Enum):
     ASSASSIN = 4
     CONTESSA = 5
     AMBASSADOR = 6
-
