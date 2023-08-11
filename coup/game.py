@@ -38,15 +38,22 @@ class Game:
 
             player.coins = 2
 
+    def __repr__(self) -> str:
+        return f"""\
+{self.__class__.__name__}(
+    current_player_idx={self.current_player_idx},
+    prev_action={self.prev_action},
+    players={self.players}
+)"""
+
     @property
     def other_player_idx(self) -> int:
         return 0 if self.current_player_idx == 1 else 1
 
     def is_over(self) -> int | None:
-        """Returns the winner if the game is over, None otherwise."""
-        alive_players = list(
-            filter(lambda p: p.hand != [Card.EMPTY, Card.EMPTY], self.players)
-        )
+        """Returns the index of the winner if the game is over, None otherwise."""
+        alive_players = list(filter(lambda p: len(p.hand) > 0, self.players))
+        logging.debug(f"{alive_players=}\ncount: {len(alive_players)}")
         if len(alive_players) == 1:
             return self.players.index(alive_players[0])
         return None
@@ -54,9 +61,9 @@ class Game:
     def play(self) -> int:
         while (winner := self.is_over()) is None:
             for i, player in enumerate(self.players):
-                if winner := self.is_over():
+                if (winner := self.is_over()) is not None:
                     return winner
-                logging.info(f"\nPlayer {i}'s turn\n")
+                logging.info(f"\nPlayer {i + 1}'s turn\n")
                 [logging.debug(player) for player in self.players]
                 self.current_player_idx = i
 
@@ -66,8 +73,8 @@ class Game:
 
                 # Ask to
                 highest_action = Action.NOTHING
-                for p in self.players:
-                    if player == p:
+                for j, p in enumerate(self.players):
+                    if i == j:
                         continue
 
                     res = p.ask_action(self.get_legal_actions())
@@ -82,7 +89,9 @@ class Game:
         return winner
 
     def handle_action(self, action: Action):
-        logging.debug(f"Updating state: {self.prev_action=} {action=}")
+        logging.debug(
+            f"[+] Updating state [{self.current_player_idx}]: {self.prev_action=} {action=}"
+        )
         if self.prev_action == Action.NOTHING:
             ...
 
@@ -106,36 +115,36 @@ class Game:
                 player.hand.append(self.deck.pop())
 
                 other_player = self.players[self.other_player_idx]
-                other_player.dead.remove(Card.EMPTY)
                 other_player.dead.append(
                     other_player.hand.pop(
                         randint(0, len(self.players[self.other_player_idx].hand) - 1)
                     )
                 )
-                other_player.hand.append(Card.EMPTY)
 
                 player.coins += 3
             else:
                 logging.debug("challenge succeeded")
                 # TODO: player choose card to lose influence
                 player.dead.append(player.hand.pop(randint(0, len(player.hand) - 1)))
-                player.dead.remove(Card.EMPTY)
-                player.hand.append(Card.EMPTY)
 
         elif self.prev_action == Action.COUP and action == Action.NOTHING:
             self.players[self.current_player_idx].coins -= 7
-            other_player_idx = 0 if self.current_player_idx == 1 else 0
-            self.players[other_player_idx].lose_influence()
-
-        elif self.prev_action == Action.STEAL and action == Action.BLOCK_STEAL:
-            ...
+            other_player = self.players[self.other_player_idx]
+            other_player.dead.append(
+                other_player.hand.pop(
+                    randint(0, len(self.players[self.other_player_idx].hand) - 1)
+                )
+            )
 
         self.prev_action = action
 
     def get_legal_actions(self) -> list[Action]:
         player = self.players[self.current_player_idx]
         # Player's turn
-        if self.prev_action == Action.NOTHING:
+        if (
+            self.prev_action == Action.NOTHING
+            or self.prev_action == Action.CHALLENGE_TAX
+        ):
             if player.coins >= 10:
                 return [Action.COUP]
 
@@ -189,7 +198,7 @@ class Game:
         elif self.prev_action == Action.BLOCK_ASSASSINATE:
             return [Action.NOTHING, Action.CHALLENGE_BLOCK_ASSASSINATE]
 
-        elif self.prev_action == Action.CHALLENGE_TAX:
-            return [Action.NOTHING]
+        # elif self.prev_action == Action.CHALLENGE_TAX:
+        #     return [Action.NOTHING]
 
         raise ValueError(f"{self.prev_action} does not have any valid responses")

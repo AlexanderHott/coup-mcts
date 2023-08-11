@@ -1,21 +1,36 @@
 from coup.game import Game
 from coup.player import CliPlayer, RandomPlayer
+from coup.mcts import MCTSPlayer, MCTS
 import logging
 
 if __name__ == "__main__":
-    # p1 = CliPlayer()
-    # p2 = CliPlayer()
-    logging.getLogger().setLevel(logging.DEBUG)
-    p1_wins: list[bool] = []
-    # game = Game([p1, p2])
-    # print(game.play())
+    logging.getLogger().setLevel(logging.INFO)
     p1 = RandomPlayer()
     p2 = RandomPlayer()
-    for _ in range(5000):
-        p1.reset()
-        p2.reset()
-        game = Game([p1, p2])
-        winner = game.play()
-        p1_wins.append(winner == p1)
-
-    print(p1_wins.count(True) / len(p1_wins))
+    game = Game([p1, p2])
+    mcts = MCTS(game)
+    mcts.search(1)
+    logging.getLogger().setLevel(logging.DEBUG)
+    print(mcts.best_move())
+    # random = False
+    # if not random:
+    #     p1 = CliPlayer()
+    #     # p2 = CliPlayer()
+    #     # p2 = RandomPlayer()
+    #     p2 = MCTSPlayer()
+    #     game = Game([p1, p2])
+    #     p2.mcts = MCTS(game)
+    #
+    #     print(game.play())
+    # else:
+    #     p1 = RandomPlayer()
+    #     p2 = RandomPlayer()
+    #     p1_wins: list[bool] = []
+    #     for _ in range(5000):
+    #         p1.reset()
+    #         p2.reset()
+    #         game = Game([p1, p2])
+    #         winner = game.play()
+    #         p1_wins.append(winner == 0)
+    #
+    #     print(p1_wins.count(True) / len(p1_wins))
