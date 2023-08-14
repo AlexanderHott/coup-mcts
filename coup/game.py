@@ -4,7 +4,7 @@ import logging
 from coup.player import Player
 from coup.action import Card, Action
 
-Cuid2 = str
+# Cuid2 = str
 
 
 class Game:
@@ -68,10 +68,9 @@ class Game:
                 self.current_player_idx = i
 
                 action = player.ask_action(self.get_legal_actions())
-
                 self.handle_action(action)
 
-                # Ask to
+                # Ask to block
                 highest_action = Action.NOTHING
                 for j, p in enumerate(self.players):
                     if i == j:
@@ -97,12 +96,11 @@ class Game:
 
         if self.prev_action == Action.INCOME and action == Action.NOTHING:
             self.players[self.current_player_idx].coins += 1
+            self.current_player_idx = self.other_player_idx
 
         elif self.prev_action == Action.TAX and action == Action.NOTHING:
-            logging.debug("taxing")
             self.players[self.current_player_idx].coins += 3
-            # self.prev_action = action
-            # prev_state.players[self.current_player_idx].coins += 3
+            self.current_player_idx = self.other_player_idx
 
         elif self.prev_action == Action.TAX and action == Action.CHALLENGE_TAX:
             logging.debug("challengin tax")
@@ -126,6 +124,7 @@ class Game:
                 logging.debug("challenge succeeded")
                 # TODO: player choose card to lose influence
                 player.dead.append(player.hand.pop(randint(0, len(player.hand) - 1)))
+            self.current_player_idx = self.other_player_idx
 
         elif self.prev_action == Action.COUP and action == Action.NOTHING:
             self.players[self.current_player_idx].coins -= 7

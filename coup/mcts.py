@@ -28,8 +28,12 @@ class Node:
             self.children[child.action] = child
 
     def value(self, explore: float = EXPLORATION) -> float:
+        """UCT value of node.
+
+        https://en.wikipedia.org//wiki/Monte_Carlo_tree_search#Exploration_and_exploitation
+        """
         if self.N == 0:
-            return 0
+            return float("inf")
 
         return (self.Q / self.N) + explore * math.sqrt(
             math.log(self.parent.N if self.parent else 0) / self.N
@@ -67,14 +71,14 @@ class MCTS:
             max_nodes = [n for n in children if n.value() == max_val]
 
             node = random.choice(max_nodes)
-            game.handle_action(node.action)
+            self.move(node.action)
 
             if node.N == 0:
                 return node, game
 
         if self.expand(node, game):
             node = random.choice(list(node.children.values()))
-            game.handle_action(node.action)
+            self.move(node.action)
 
         return node, game
 
@@ -90,14 +94,26 @@ class MCTS:
     def roll_out(self, game: Game) -> int:
         while (winner := game.is_over()) is None:
             legal_actions = game.get_legal_actions()
-            if len(legal_actions) == 1:
-                logging.debug(f"Only action: {legal_actions[0]}")
-                game.handle_action(legal_actions[0])
-            else:
-                action = random.choice(legal_actions)
-                logging.debug(f"Random action: {action}")
-                game.handle_action(action)
-            game.current_player_idx = game.other_player_idx
+
+            action = random.choice(legal_actions)
+            logging.debug(f"Random action: {action}")
+            game.handle_action(action)
+
+            highest_action = Action.NOTHING
+            for j in range(len(game.players)):
+                if game.current_player_idx == j:
+                    continue
+
+                res = random.choice(game.get_legal_actions())
+                if res == Action.NOTHING:
+                    continue
+
+                highest_action = res
+                break
+
+            game.handle_action(highest_action)
+
+            # game.current_player_idx = game.other_player_idx
 
         return winner
 
@@ -119,7 +135,11 @@ class MCTS:
         start = time.process_time()
 
         num_rollouts = 0
-        while time.process_time() - start < time_limit:
+        for action in self.root_game.get_legal_actions():
+            self.root.children[action] = Node(action, self.root)
+
+        # while time.process_time() - start < time_limit:
+        while num_rollouts < 100:
             node, game = self.select_node()
             logging.debug(f"{node=}\n{game=}")
             outcome = self.roll_out(game)
@@ -141,14 +161,59 @@ class MCTS:
         best_child = random.choice(max_nodes)
         return best_child.action
 
-    def move(self, action: Action):
-        if action in self.root.children.keys():
-            self.root_game.handle_action(action)
-            self.root = self.root.children[action]
-            return
-
+    def handle_action(self, action: Action):
         self.root_game.handle_action(action)
-        self.root = Node(Action.NOTHING, None)
+
+        if action in self.root.children.keys():
+            self.root = self.root.children[action]
+        else:
+            self.root = Node(Action.NOTHING, None)
+
+
+    def _do_everything(self):
+
+        for action in self.root_game.get_legal_actions():
+            self.root.children[action] = Node(action, self.root)
+
+        start = time.process_time()
+        # while start + 5 > time.process_time():
+        for _ in range(500):
+            # Select
+            node = self.root
+            game = copy.deepcopy(self.root_game)
+            # while there are still leaves
+            while len(node.children) != 0:
+                if game.is_over() is not None:
+                    print("ahh")
+                    ...
+                # Select best uct leaf node, starting with the root
+                children = node.children.values()
+                max_val = max(children, key=lambda n: n.value()).value()
+                max_nodes = [n for n in children if n.value() == max_val]
+                if len(max_nodes) == 0:
+                    print("aah")
+
+                node = random.choice(max_nodes)
+                game.handle_action(node.action)
+            if (outcome := game.is_over()) is None:
+
+                # Expand
+                # add a child node to the selected node
+                legal_actions = game.get_legal_actions()
+
+                for action in legal_actions:
+                    node.children[action] = Node(action, node)
+
+                node = random.choice(list(node.children.values()))
+                game.handle_action(node.action)
+
+                # Simulate
+                # simulate a game
+                outcome = self.roll_out(game)
+
+            # Back prop
+            # backpropigate the values
+            self.back_propagate(node, game.current_player_idx, outcome)
 
 
 class MCTSPlayer:

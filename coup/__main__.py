@@ -1,16 +1,18 @@
 from coup.game import Game
-from coup.player import CliPlayer, RandomPlayer
+from coup.player import CliPlayer, RandomPlayer, Player
 from coup.mcts import MCTSPlayer, MCTS
 import logging
 
 if __name__ == "__main__":
     logging.getLogger().setLevel(logging.INFO)
-    p1 = RandomPlayer()
-    p2 = RandomPlayer()
+    p1: Player = RandomPlayer()
+    p2: Player = RandomPlayer()
     game = Game([p1, p2])
     mcts = MCTS(game)
-    mcts.search(1)
-    logging.getLogger().setLevel(logging.DEBUG)
+    # mcts.search(2)
+    # logging.getLogger().setLevel(logging.DEBUG)
+
+    mcts._do_everything()
     print(mcts.best_move())
     # random = False
     # if not random:

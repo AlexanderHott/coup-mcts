@@ -4,9 +4,9 @@ import random
 
 from coup.action import Card, Action
 
-from cuid2 import cuid_wrapper
+# from cuid2 import cuid_wrapper
 
-id_generator = cuid_wrapper()
+# id_generator = cuid_wrapper()
 
 
 class Player(Protocol):
@@ -56,7 +56,7 @@ class RandomPlayer:
 
         self.dead = []
         self.coins = coins
-        self.id = id_generator()
+        # self.id = id_generator()
 
     def reset(self):
         self.hand = []
@@ -94,7 +94,7 @@ class CliPlayer:
 
         self.dead = []
         self.coins = coins
-        self.id = id_generator()
+        # self.id = id_generator()
 
     def reset(self):
         self.hand = []
